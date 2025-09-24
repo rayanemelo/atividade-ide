@@ -1,6 +1,19 @@
 version: "3.9"
 
 services:
+  postgres:
+    image: postgres:16
+    container_name: kc-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloakpwd
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      
   keycloak:
     image: keycloak/keycloak:26.3.3
     command: start-dev
@@ -8,6 +21,10 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
       KC_HEALTH_ENABLED: "true"        
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloakpwd
     ports:
       - "8080:8080"
       - "9000:9000"
@@ -57,3 +74,6 @@ services:
     depends_on:
       terraform:
         condition: service_completed_successfully
+
+volumes:
+  postgres_data:

@@ -96,29 +96,6 @@ resource "keycloak_user" "ray" {
 }
 
 
-# resource "keycloak_oidc_identity_provider" "google" {
-#   realm        = keycloak_realm.realm.id
-#   alias        = "google"
-#   display_name = "Google"
-#   enabled      = true
-
-#   issuer            = "https://accounts.google.com"
-#   authorization_url = "https://accounts.google.com/o/oauth2/v2/auth"
-#   token_url         = "https://oauth2.googleapis.com/token"
-#   user_info_url     = "https://openidconnect.googleapis.com/v1/userinfo"
-
-#   client_id      = var.google_client_id
-#   client_secret  = var.google_client_secret
-#   default_scopes = "openid email profile"
-
-#   trust_email                   = true
-#   store_token                   = false
-#   backchannel_supported         = true
-#   sync_mode                     = "IMPORT"
-#   first_broker_login_flow_alias = "first broker login"
-#   gui_order                     = 1
-# }
-
 resource "keycloak_oidc_google_identity_provider" "google" {
   realm         = keycloak_realm.realm.id
   client_id     = var.google_client_id

@@ -39,12 +39,12 @@ resource "keycloak_realm" "realm" {
   registration_allowed = true
 
   otp_policy {
-    type               = "totp"        # "totp" ou "hotp"
-    algorithm          = "HmacSHA1"    # HmacSHA1, HmacSHA256, HmacSHA512
+    type               = "totp"         
+    algorithm          = "HmacSHA1"  
     digits             = 6
-    period             = 30            # segundos
+    period             = 30        
     look_ahead_window  = 1
-    initial_counter    = 0             # relevante só para HOTP
+    initial_counter    = 0          
   }
 }
 
@@ -72,7 +72,7 @@ resource "keycloak_openid_client" "openid_client" {
 
 resource "keycloak_required_action" "require_totp" {
   realm_id       = keycloak_realm.realm.id
-  alias          = "CONFIGURE_TOTP"  # built-in
+  alias          = "CONFIGURE_TOTP"   
   name           = "Configure OTP"
   enabled        = true
   default_action = true

@@ -1,0 +1,59 @@
+version: "3.9"
+
+services:
+  keycloak:
+    image: keycloak/keycloak:26.3.3
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD}
+      KC_HEALTH_ENABLED: "true"        
+    ports:
+      - "8080:8080"
+      - "9000:9000"
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          "bash -lc 'exec 3<>/dev/tcp/127.0.0.1/9000 && printf \"GET /health/ready HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n\" >&3 && grep -q \"200\" <&3'",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
+  terraform:
+      image: hashicorp/terraform:1.9
+      working_dir: /workspace
+      environment:
+        TF_VAR_kc_admin_password: ${KC_ADMIN_PASSWORD} 
+        TF_VAR_kc_secret_key: ${KC_SECRET_KEY}
+        TF_VAR_google_client_id: ${GOOGLE_CLIENT_ID}
+        TF_VAR_google_client_secret: ${GOOGLE_CLIENT_SECRET}
+        TF_VAR_github_client_id: ${GITHUB_CLIENT_ID}
+        TF_VAR_github_client_secret: ${GITHUB_CLIENT_SECRET}
+      volumes:
+        - .:/workspace
+      entrypoint: ['/bin/sh', '-lc']
+      command: |
+        'set -euo pipefail
+        echo "Keycloak ready! Running Terraform..."
+        terraform init
+        terraform apply -auto-approve'
+      depends_on:
+        keycloak:
+          condition: service_healthy
+
+  auth-oidc:
+    image: pkoenig10/auth-oidc:latest
+    command: >
+      -client-id SP
+      -client-secret ${KC_SECRET_KEY}
+      -issuer-url http://keycloak:8080/realms/IDP
+      -external-url http://localhost
+      -token-key 123456
+    restart: on-failure
+    network_mode: "host"
+    depends_on:
+      terraform:
+        condition: service_completed_successfully
